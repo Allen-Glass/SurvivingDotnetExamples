@@ -1,0 +1,8 @@
+
+.vs/
+*.cache
+*.editorconfig
+*.props
+*.targets
+bin
+obj
