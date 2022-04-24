@@ -17,6 +17,7 @@ namespace HttpClientExamples.Part3
             var githubAuthConfig = configuration.GetSection("GithubAuth");
             var githubAuthClientConfig = githubAuthConfig.Get<GithubAuthSettings>();
 
+            services.Configure<GithubSettings>(githubConfig);
             services.Configure<GithubAuthSettings>(githubAuthConfig);
 
             services.AddTransient<IGithubClient, GithubClient>();

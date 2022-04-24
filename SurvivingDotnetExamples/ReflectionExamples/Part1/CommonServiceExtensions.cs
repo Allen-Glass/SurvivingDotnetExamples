@@ -1,15 +1,14 @@
-﻿using HttpClientExamples.Models;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
+using ReflectionExamples.Part0.Services;
+using ReflectionExamples.Part0.Services.Models;
 using System.Net.Http.Headers;
 
-//requires Microsoft.Extensions.Options.ConfigurationExtensions installed
-namespace HttpClientExamples.Part4
+namespace ReflectionExamples.Part1
 {
-    public static class GithubServiceExtensions
+    public static class CommonServiceExtensions
     {
-        public static void Add(this IServiceCollection services, IConfiguration configuration)
+        public static void AddServiceTypes(this IServiceCollection services, IConfiguration configuration)
         {
             var githubConfig = configuration.GetSection("Github");
             var githubClientConfig = githubConfig.Get<GithubSettings>();
@@ -17,13 +16,23 @@ namespace HttpClientExamples.Part4
             var githubAuthConfig = configuration.GetSection("GithubAuth");
             var githubAuthClientConfig = githubAuthConfig.Get<GithubAuthSettings>();
 
-            services.Configure<GithubSettings>(githubConfig);
+            services.Configure<GithubSettings>(githubConfig); 
             services.Configure<GithubAuthSettings>(githubAuthConfig);
 
-            services.AddTransient<IGithubClient, GithubClient>();
-            services.AddTransient<IGithubAuthClient, GithubAuthClient>();
-            services.AddTransient<IGithubService, GithubService>();
-            services.AddTransient<GithubAuthDelegatingHandler>();
+
+            var assembly = typeof(CommonServiceExtensions).Assembly;
+            var types = assembly.GetTypes().Where(t => t.IsNotStatic() && !t.IsInterface && t.IsAssignableFrom(t));
+
+            foreach (var type in types)
+            {
+                var interfaces = type.GetInterfaces();
+
+                foreach (var interfce in interfaces)
+                {
+                    services.AddTransient(interfce, type);
+                }
+            }
+
 
             services.AddHttpClient<IGithubHttpClientFactory, GithubHttpClientFactory>(client =>
             {
@@ -38,5 +47,7 @@ namespace HttpClientExamples.Part4
                 client.BaseAddress = new Uri(githubClientConfig.BaseUrl);
             });
         }
+
+        private static bool IsNotStatic(this Type t) => !t.IsAbstract && !t.IsSealed;
     }
 }

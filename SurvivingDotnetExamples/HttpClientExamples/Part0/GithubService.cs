@@ -95,7 +95,7 @@ namespace HttpClientExamples.Part0
 
             using var httpClient = new HttpClient
             {
-                BaseAddress = new Uri(_githubSettings.BaseUrl),
+                BaseAddress = new Uri(_githubSettings.BaseAuthUrl)
             };
 
             var urlEncodedContent = new FormUrlEncodedContent(keyValuePairs);

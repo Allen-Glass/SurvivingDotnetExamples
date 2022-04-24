@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31005.135
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpClientExamples", "HttpClientExamples\HttpClientExamples.csproj", "{22E15E1B-A6FD-4E20-88ED-F5835A20CAC6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpClientExamples", "HttpClientExamples\HttpClientExamples.csproj", "{22E15E1B-A6FD-4E20-88ED-F5835A20CAC6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReflectionExamples", "ReflectionExamples\ReflectionExamples.csproj", "{49E0CC5C-9CE8-44CF-9B34-9623E29C45E6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{22E15E1B-A6FD-4E20-88ED-F5835A20CAC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{22E15E1B-A6FD-4E20-88ED-F5835A20CAC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{22E15E1B-A6FD-4E20-88ED-F5835A20CAC6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49E0CC5C-9CE8-44CF-9B34-9623E29C45E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49E0CC5C-9CE8-44CF-9B34-9623E29C45E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49E0CC5C-9CE8-44CF-9B34-9623E29C45E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49E0CC5C-9CE8-44CF-9B34-9623E29C45E6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
