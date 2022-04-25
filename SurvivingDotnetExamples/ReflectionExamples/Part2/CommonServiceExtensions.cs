@@ -27,8 +27,6 @@ namespace ReflectionExamples.Part2
             services.AddHttpClient<IGithubHttpClientFactory, GithubHttpClientFactory>(client =>
             {
                 client.BaseAddress = new Uri(githubClientConfig.BaseUrl);
-
-                //github documentation recommends using this Accept header
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
             }).AddHttpMessageHandler<GithubAuthDelegatingHandler>();
 

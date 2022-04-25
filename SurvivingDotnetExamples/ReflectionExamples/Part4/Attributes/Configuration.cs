@@ -1,4 +1,4 @@
-﻿namespace ReflectionExamples.Part3.Attributes
+﻿namespace ReflectionExamples.Part4.Attributes
 {
     public class Configuration : Attribute
     {

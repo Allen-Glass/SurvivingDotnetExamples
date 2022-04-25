@@ -25,8 +25,6 @@ namespace ReflectionExamples.Part3
             services.AddHttpClient<IGithubHttpClientFactory, GithubHttpClientFactory>(client =>
             {
                 client.BaseAddress = new Uri(githubClientConfig.BaseUrl);
-
-                //github documentation recommends using this Accept header
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
             }).AddHttpMessageHandler<GithubAuthDelegatingHandler>();
 
@@ -64,15 +62,20 @@ namespace ReflectionExamples.Part3
 
             foreach (var type in types)
             {
-                var config = Attribute.GetCustomAttribute(type, typeof(Configuration)) as Configuration;
-
-                if (config == null)
+                if (Attribute.GetCustomAttribute(type, typeof(Configuration)) is not Configuration config)
                     continue; //this won't be null based off Where clause above, but this will make your IDE happy
 
-                var githubConfig = configuration.GetSection(config.SectionName);
-                services.Configure<type>(githubConfig);
+                config.SetSectionName(nameof(type));
+                var obj = Activator.CreateInstance(type);
+
+                if (obj == null)
+                    continue;
+
+                configuration.GetSection(config.SectionName).Bind(obj);
+                services.AddSingleton(obj);
             }
         }
 
         private static bool IsNotStatic(this Type t) => !t.IsAbstract && !t.IsSealed;
     }
+}

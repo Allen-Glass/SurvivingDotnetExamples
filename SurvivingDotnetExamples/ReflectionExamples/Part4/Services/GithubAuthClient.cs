@@ -1,7 +1,8 @@
-﻿using ReflectionExamples.Part2.Services.Models;
+﻿using Microsoft.Extensions.Options;
+using ReflectionExamples.Part3.Services.Models;
 using System.Text.Json;
 
-namespace ReflectionExamples.Part2.Services
+namespace ReflectionExamples.Part4.Services
 {
     public interface IGithubAuthClient
     {
@@ -13,10 +14,10 @@ namespace ReflectionExamples.Part2.Services
         private readonly IGithubAuthHttpClientFactory _githubAuthHttpClientFactory;
         private readonly GithubAuthSettings _githubAuthSettings;
 
-        public GithubAuthClient(IGithubAuthHttpClientFactory githubAuthHttpClientFactory, GithubAuthSettings githubAuthSettings)
+        public GithubAuthClient(IGithubAuthHttpClientFactory githubAuthHttpClientFactory, IOptions<GithubAuthSettings> options)
         {
             _githubAuthHttpClientFactory = githubAuthHttpClientFactory;
-            _githubAuthSettings = githubAuthSettings;
+            _githubAuthSettings = options.Value;
         }
 
         public async Task<TokenResponse> GetTokenAsync()

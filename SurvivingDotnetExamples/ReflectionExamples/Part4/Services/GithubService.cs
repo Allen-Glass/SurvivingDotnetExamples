@@ -1,6 +1,6 @@
-﻿using ReflectionExamples.Part0.Services.Models;
+﻿using ReflectionExamples.Part3.Services.Models;
 
-namespace ReflectionExamples.Part1.Services
+namespace ReflectionExamples.Part4.Services
 {
     public interface IGithubService
     {

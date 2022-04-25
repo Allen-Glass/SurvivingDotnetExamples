@@ -1,6 +1,6 @@
 ﻿using ReflectionExamples.Part2.Services.Models;
 
-namespace ReflectionExamples.Part0.Services
+namespace ReflectionExamples.Part2.Services
 {
     public interface IGithubService
     {
