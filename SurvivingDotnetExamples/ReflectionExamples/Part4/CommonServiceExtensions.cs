@@ -25,7 +25,6 @@ namespace ReflectionExamples.Part4
             {
                 var interfaces = type.GetInterfaces();
                 var singleAttribute = Attribute.GetCustomAttribute(type, typeof(Singleton));
-                var config = Attribute.GetCustomAttribute(type, typeof(Configuration)) as Configuration;
 
                 foreach (var interfce in interfaces)
                 {
