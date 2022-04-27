@@ -1,10 +1,13 @@
-﻿namespace ReflectionExamples.Part3.Services
+﻿using ReflectionExamples.Part3.Attributes;
+
+namespace ReflectionExamples.Part3.Services
 {
     public interface IGithubTokenCache
     {
         Task<string> GetTokenAsync();
     }
 
+    [Singleton]
     public class GithubTokenCache : IGithubTokenCache
     {
         private string AccessToken { get; set; }

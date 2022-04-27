@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using ReflectionExamples.Part0.Services.Models;
+using ReflectionExamples.Part1.Services.Models;
 using System.Net.Http.Headers;
 
 //requires Microsoft.Extensions.Options.ConfigurationExtensions installed
@@ -22,7 +22,7 @@ namespace ReflectionExamples.Part1.Services
             services.AddTransient<IGithubAuthClient, GithubAuthClient>();
             services.AddSingleton<IGithubTokenCache, GithubTokenCache>();
             services.AddTransient<IGithubService, GithubService>();
-            services.AddTransient<GithubAuthDelegatingHandler>();
+            services.AddTransient<GithubDelegatingHandler>();
 
             services.AddHttpClient<IGithubHttpClientFactory, GithubHttpClientFactory>(client =>
             {
@@ -30,7 +30,7 @@ namespace ReflectionExamples.Part1.Services
 
                 //github documentation recommends using this Accept header
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
-            }).AddHttpMessageHandler<GithubAuthDelegatingHandler>();
+            }).AddHttpMessageHandler<GithubDelegatingHandler>();
 
             services.AddHttpClient<IGithubAuthHttpClientFactory, GithubAuthHttpClientFactory>(client =>
             {

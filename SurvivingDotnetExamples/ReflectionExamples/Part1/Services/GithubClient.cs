@@ -1,6 +1,4 @@
-﻿using ReflectionExamples.Part4.Attributes;
-using ReflectionExamples.Part4.Services.Models;
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace ReflectionExamples.Part1.Services
 {
@@ -11,7 +9,6 @@ namespace ReflectionExamples.Part1.Services
         Task<TResult> PostAsync<T, TResult>(T model, string url);
     }
 
-    [Client(typeof(GithubClient), typeof(GithubHttpClientFactory), typeof(GithubSettings), typeof(GithubAuthDelegatingHandler))]
     public class GithubClient : IGithubClient
     {
         private readonly IGithubHttpClientFactory _githubHttpClientFactory;

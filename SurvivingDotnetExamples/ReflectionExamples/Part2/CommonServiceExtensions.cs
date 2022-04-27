@@ -24,11 +24,13 @@ namespace ReflectionExamples.Part2
             var assembly = typeof(CommonServiceExtensions).Assembly;
             services.AddServices(assembly);
 
+            services.AddTransient<GithubDelegatingHandler>();
+
             services.AddHttpClient<IGithubHttpClientFactory, GithubHttpClientFactory>(client =>
             {
                 client.BaseAddress = new Uri(githubClientConfig.BaseUrl);
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
-            }).AddHttpMessageHandler<GithubAuthDelegatingHandler>();
+            }).AddHttpMessageHandler<GithubDelegatingHandler>();
 
             services.AddHttpClient<IGithubAuthHttpClientFactory, GithubAuthHttpClientFactory>(client =>
             {

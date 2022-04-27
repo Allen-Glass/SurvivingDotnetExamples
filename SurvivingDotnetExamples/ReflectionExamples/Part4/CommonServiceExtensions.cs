@@ -1,9 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ReflectionExamples.Part4.Attributes;
-using ReflectionExamples.Part4.Services;
-using ReflectionExamples.Part4.Services.Models;
-using System.Net.Http.Headers;
 using System.Reflection;
 
 namespace ReflectionExamples.Part4
@@ -16,7 +13,7 @@ namespace ReflectionExamples.Part4
 
             services.AddServices(assembly);
             services.AddConfiguration(configuration, assembly);
-            services.AddHttpClientConfiguration(assembly);
+            services.AddHttpClientConfiguration(configuration, assembly);
         }
 
         private static void AddServices(this IServiceCollection services, Assembly assembly)
@@ -47,21 +44,26 @@ namespace ReflectionExamples.Part4
 
             foreach (var type in types)
             {
-                if (Attribute.GetCustomAttribute(type, typeof(Configuration)) is not Configuration config)
-                    continue; //this won't be null based off Where clause above, but this will make your IDE happy
+                var configurationSection = configuration.GetConfigurationSection(type);
 
-                config.SetSectionName(nameof(type));
-                var obj = Activator.CreateInstance(type);
+                var method = typeof(OptionsConfigurationServiceCollectionExtensions)
+                    .GetMethods()
+                    .Where(m => m.Name == "Configure")
+                    .Select(m => new
+                    {
+                        Method = m,
+                        Params = m.GetParameters(),
+                    })
+                    .Where(x => x.Params.Length == 2)
+                    .Select(x => x.Method)
+                    .First()
+                    .MakeGenericMethod(type);
 
-                if (obj == null)
-                    continue;
-
-                configuration.GetSection(config.SectionName).Bind(obj);
-                services.AddSingleton(obj);
+                method.Invoke(null, new object[] { services, configurationSection });
             }
         }
 
-        private static void AddHttpClientConfiguration(this IServiceCollection services, Assembly assembly)
+        private static void AddHttpClientConfiguration(this IServiceCollection services, IConfiguration configuration, Assembly assembly)
         {
             var types = assembly.GetTypes()
                 .Where(type => Attribute.GetCustomAttribute(type, typeof(Client)) != null);
@@ -71,51 +73,78 @@ namespace ReflectionExamples.Part4
                 if (Attribute.GetCustomAttribute(type, typeof(Client)) is not Client attribute)
                     continue;
 
+                var attributeType = attribute.GetType();
+                var attributeProperties = attributeType.GetProperties();
+
+                var namespacePath = typeof(CommonServiceExtensions).Namespace;
+                var truncatedName = type.Name.Replace("Client", "");
+
+                var httpClientFactoryInterfaceType = assembly.GetType($"{namespacePath}.Services.I{truncatedName}HttpClientFactory");
+                var httpClientFactoryConcreteType = assembly.GetType($"{namespacePath}.Services.{truncatedName}HttpClientFactory");
+                var delegatingHandlerType = assembly.GetType($"{namespacePath}.Services.{truncatedName}DelegatingHandler");
+                var settingsType = assembly.GetType($"{namespacePath}.Services.Models.{truncatedName}Settings");
+
+                var configurationSection = configuration.GetConfigurationSection(settingsType);
+                var useableConfiguration = configurationSection.Get(settingsType);
+                var baseUrl = useableConfiguration.GetType().GetProperties().Single(x => x.Name == "BaseUrl").GetValue(useableConfiguration) as string;
+
+
                 //The method we want
                 //public static IHttpClientBuilder AddHttpClient<TClient, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation>(this IServiceCollection services, Action<HttpClient> configureClient)
-                var method = services.GetType()
+                var method = typeof(HttpClientFactoryServiceCollectionExtensions)
                     .GetMethods()
                     .Where(m => m.Name == "AddHttpClient")
-                    .Select(m => new {
+                    .Select(m => new
+                    {
                         Method = m,
                         Params = m.GetParameters(),
                         GenericArgs = m.GetGenericArguments()
                     })
-                    .Where(x => x.Params.Length == 2
-                                && x.GenericArgs.Length == 2
-                                && x.Params[1].GetType() == typeof(Action<HttpClient>))
+                    .Where(x => x.Params.Length == 2 && x.GenericArgs.Length == 2)
                     .Select(x => x.Method)
-                    .First();
+                    .First(x => x.GetParameters()[1].ParameterType == typeof(Action<HttpClient>))
+                    .MakeGenericMethod(httpClientFactoryInterfaceType, httpClientFactoryConcreteType);
 
-                var configuredMethod = method.MakeGenericMethod(attribute.HttpClientFactoryInterface, attribute.HttpClientFactoryConcrete);
                 Action<HttpClient> configureClient = client =>
                 {
-                    client.BaseAddress = new Uri(attribute.BaseUrl);
+                    client.BaseAddress = new Uri(baseUrl);
                 };
 
-                //first param is null as "this" is a static class
-                var methodParams = new object[] { services, configureClient };
-                var httpClientBuilder = configuredMethod.Invoke(null, methodParams) as IHttpClientBuilder;
+                var httpClientBuilder = method.Invoke(null, new object[] { services, configureClient }) as IHttpClientBuilder;
 
-                if (attribute.DelegatingHandler == null)
-                {
-                    //take the one AddHttpMessageHandler that has the generic argument
-                    //public static IHttpClientBuilder AddHttpMessageHandler<THandler>(this IHttpClientBuilder builder) 
-                    var delegatingHandlerMethod = services.GetType()
+                if (delegatingHandlerType != null)
+                    services.RegisterDelegatingHandler(httpClientBuilder, delegatingHandlerType);
+            }
+        }
+
+        private static void RegisterDelegatingHandler(this IServiceCollection services, IHttpClientBuilder httpClientBuilder, Type delegatingHandler)
+        {
+            //take the one AddHttpMessageHandler that has the generic argument
+            //public static IHttpClientBuilder AddHttpMessageHandler<THandler>(this IHttpClientBuilder builder) 
+            var delegatingHandlerMethod = typeof(HttpClientBuilderExtensions)
                         .GetMethods()
                         .Where(m => m.Name == "AddHttpMessageHandler")
                         .Select(m => new {
                             Method = m,
                             GenericArgs = m.GetGenericArguments()
                         })
-                        .Where(x => x.GenericArgs.Length == 2)
+                        .Where(x => x.GenericArgs.Length == 1)
                         .Select(x => x.Method)
                         .First();
 
-                    var configuredDelegatingHandlerMethod = delegatingHandlerMethod.MakeGenericMethod(attribute.DelegatingHandler);
-                    configuredDelegatingHandlerMethod.Invoke(null, new object[] { httpClientBuilder });
-                }
-            }
+            var configuredDelegatingHandlerMethod = delegatingHandlerMethod.MakeGenericMethod(delegatingHandler);
+            configuredDelegatingHandlerMethod.Invoke(null, new object[] { httpClientBuilder });
+            services.AddTransient(delegatingHandler);
+        }
+
+        private static IConfigurationSection GetConfigurationSection(this IConfiguration configuration, Type type)
+        {
+            if (Attribute.GetCustomAttribute(type, typeof(Configuration)) is not Configuration config)
+                throw new ArgumentException($"Type, {type.FullName}, does not have Configuration attribute");
+
+            config.SetSectionName(type.Name);
+
+            return configuration.GetSection(config.SectionName);
         }
 
         private static bool IsNotStatic(this Type t) => !t.IsAbstract && !t.IsSealed;

@@ -1,12 +1,12 @@
 ﻿using System.Net.Http.Headers;
 
-namespace ReflectionExamples.Part4.Services
+namespace ReflectionExamples.Part3.Services
 {
-    public class GithubAuthDelegatingHandler : DelegatingHandler
+    public class GithubDelegatingHandler : DelegatingHandler
     {
         private readonly IGithubTokenCache _githubTokenCache;
 
-        public GithubAuthDelegatingHandler(IGithubTokenCache githubTokenCache)
+        public GithubDelegatingHandler(IGithubTokenCache githubTokenCache)
         {
             _githubTokenCache = githubTokenCache;
         }

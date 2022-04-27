@@ -16,13 +16,14 @@ namespace ReflectionExamples.Part0
             var githubAuthConfig = configuration.GetSection("GithubAuth");
             var githubAuthClientConfig = githubAuthConfig.Get<GithubAuthSettings>();
 
+            services.Configure<GithubSettings>(githubConfig);
             services.Configure<GithubAuthSettings>(githubAuthConfig);
 
             services.AddTransient<IGithubClient, GithubClient>();
             services.AddTransient<IGithubAuthClient, GithubAuthClient>();
             services.AddSingleton<IGithubTokenCache, GithubTokenCache>();
             services.AddTransient<IGithubService, GithubService>();
-            services.AddTransient<GithubAuthDelegatingHandler>();
+            services.AddTransient<GithubDelegatingHandler>();
 
             services.AddHttpClient<IGithubHttpClientFactory, GithubHttpClientFactory>(client =>
             {
@@ -30,7 +31,7 @@ namespace ReflectionExamples.Part0
 
                 //github documentation recommends using this Accept header
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
-            }).AddHttpMessageHandler<GithubAuthDelegatingHandler>();
+            }).AddHttpMessageHandler<GithubDelegatingHandler>();
 
             services.AddHttpClient<IGithubAuthHttpClientFactory, GithubAuthHttpClientFactory>(client =>
             {

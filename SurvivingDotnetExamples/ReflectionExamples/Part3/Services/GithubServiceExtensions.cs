@@ -23,7 +23,7 @@ namespace ReflectionExamples.Part3.Services
             services.AddTransient<IGithubAuthClient, GithubAuthClient>();
             services.AddSingleton<IGithubTokenCache, GithubTokenCache>();
             services.AddTransient<IGithubService, GithubService>();
-            services.AddTransient<GithubAuthDelegatingHandler>();
+            services.AddTransient<GithubDelegatingHandler>();
 
             services.AddHttpClient<IGithubHttpClientFactory, GithubHttpClientFactory>(client =>
             {
@@ -31,7 +31,7 @@ namespace ReflectionExamples.Part3.Services
 
                 //github documentation recommends using this Accept header
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
-            }).AddHttpMessageHandler<GithubAuthDelegatingHandler>();
+            }).AddHttpMessageHandler<GithubDelegatingHandler>();
 
             services.AddHttpClient<IGithubAuthHttpClientFactory, GithubAuthHttpClientFactory>(client =>
             {

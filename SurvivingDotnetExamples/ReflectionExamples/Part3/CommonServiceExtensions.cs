@@ -22,11 +22,12 @@ namespace ReflectionExamples.Part3
 
             services.AddServices(assembly);
             services.AddConfiguration(configuration, assembly);
+            services.AddTransient<GithubDelegatingHandler>();
             services.AddHttpClient<IGithubHttpClientFactory, GithubHttpClientFactory>(client =>
             {
                 client.BaseAddress = new Uri(githubClientConfig.BaseUrl);
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
-            }).AddHttpMessageHandler<GithubAuthDelegatingHandler>();
+            }).AddHttpMessageHandler<GithubDelegatingHandler>();
 
             services.AddHttpClient<IGithubAuthHttpClientFactory, GithubAuthHttpClientFactory>(client =>
             {
@@ -66,13 +67,22 @@ namespace ReflectionExamples.Part3
                     continue; //this won't be null based off Where clause above, but this will make your IDE happy
 
                 config.SetSectionName(nameof(type));
-                var obj = Activator.CreateInstance(type);
 
-                if (obj == null)
-                    continue;
+                var method = typeof(OptionsConfigurationServiceCollectionExtensions)
+                    .GetMethods()
+                    .Where(m => m.Name == "Configure")
+                    .Select(m => new {
+                        Method = m,
+                        Params = m.GetParameters(),
+                    })
+                    .Where(x => x.Params.Length == 2)
+                    .Select(x => x.Method)
+                    .First();
 
-                configuration.GetSection(config.SectionName).Bind(obj);
-                services.AddSingleton(obj);
+                var genericMethod = method.MakeGenericMethod(type);
+                var getSection = configuration.GetSection(config.SectionName);
+
+                genericMethod.Invoke(null, new object[] { services, getSection });
             }
         }
 
